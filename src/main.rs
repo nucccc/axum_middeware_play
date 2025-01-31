@@ -1,11 +1,17 @@
 use axum::{
-    Router,
-    response::IntoResponse,
-    routing::get,
+    extract::Request, middleware::{from_fn, Next}, response::{IntoResponse, Response}, routing::get, Router
 };
 
 async fn hello() -> impl IntoResponse {
     "hello"
+}
+
+async fn wannabe_middleware(
+    request: Request,
+    next: Next
+) -> Response {
+    println!("passing through middleware");
+    next.run(request).await
 }
 
 #[tokio::main]
@@ -17,7 +23,8 @@ async fn main() {
         .unwrap();
 
     let app = Router::new()
-        .route("/hello", get(hello));
+        .route("/hello", get(hello))
+        .layer(from_fn(wannabe_middleware));
 
     let server = axum::serve(listener, app);
 
