@@ -1,5 +1,9 @@
 use axum::{
-    extract::{Request, State}, middleware::{from_fn, Next}, response::{IntoResponse, Response}, routing::get, Router
+    extract::{Request, State},
+    middleware::{from_fn, Next, from_fn_with_state},
+    response::{IntoResponse, Response},
+    routing::get,
+    Router
 };
 use sqlx::PgPool;
 use std::sync::Arc;
@@ -39,6 +43,15 @@ async fn wannabe_middleware(
     next.run(request).await
 }
 
+async fn wannabe_middleware_with_state(
+    State(app_state): State<Arc<AppState>>,
+    request: Request,
+    next: Next,
+) -> Response {
+    println!("passing through middleware with state");
+    next.run(request).await
+}
+
 #[tokio::main]
 async fn main() {
     println!("starting app...");
@@ -57,6 +70,7 @@ async fn main() {
         .route("/hello", get(hello))
         .route("/has_state", get(has_state))
         .layer(from_fn(wannabe_middleware))
+        .layer(from_fn_with_state(state.clone(), wannabe_middleware_with_state))
         .route("/world", get(world))
         .with_state(state);
 
