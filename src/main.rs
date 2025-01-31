@@ -6,6 +6,10 @@ async fn hello() -> impl IntoResponse {
     "hello"
 }
 
+async fn world() -> impl IntoResponse {
+    "world"
+}
+
 async fn wannabe_middleware(
     request: Request,
     next: Next
@@ -24,7 +28,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/hello", get(hello))
-        .layer(from_fn(wannabe_middleware));
+        .layer(from_fn(wannabe_middleware))
+        .route("/world", get(world));
 
     let server = axum::serve(listener, app);
 
